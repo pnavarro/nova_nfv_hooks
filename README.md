@@ -1,4 +1,4 @@
-nova_nfv_hoojs
+nova_nfv_hooks
 ==============
 
 Nova hooks for NFV
