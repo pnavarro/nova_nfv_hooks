@@ -63,7 +63,6 @@ from nova.console import serial as serial_console
 from nova.console import type as ctype
 from nova import context as nova_context
 from nova import exception
-from nova import hooks
 from nova.i18n import _
 from nova.i18n import _LE
 from nova.i18n import _LI
@@ -97,6 +96,7 @@ from nova.virt import driver
 from nova.virt import event as virtevent
 from nova.virt import firewall
 from nova.virt import hardware
+from nova.virt.libvirt.hooks import vpci_hook
 from nova.virt.libvirt import blockinfo
 from nova.virt.libvirt import config as vconfig
 from nova.virt.libvirt import dmcrypt
@@ -4265,7 +4265,6 @@ class LibvirtDriver(driver.ComputeDriver):
 
         return guest
 
-    @hooks.add_hook("nfv_hook")
     def _get_guest_xml(self, context, instance, network_info, disk_info,
                        image_meta=None, rescue=None,
                        block_device_info=None, write_to_disk=False):
@@ -4301,7 +4300,7 @@ class LibvirtDriver(driver.ComputeDriver):
 
         LOG.debug('End _get_guest_xml xml=%(xml)s',
                   {'xml': xml}, instance=instance)
-        return xml
+        return vpci_hook.add_vpci_address_information(self, xml, instance, network_info)
 
     def _lookup_by_id(self, instance_id):
         """Retrieve libvirt domain object given an instance id.

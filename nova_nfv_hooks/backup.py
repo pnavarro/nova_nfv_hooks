@@ -63,7 +63,6 @@ from nova.console import serial as serial_console
 from nova.console import type as ctype
 from nova import context as nova_context
 from nova import exception
-from nova import hooks
 from nova.i18n import _
 from nova.i18n import _LE
 from nova.i18n import _LI
@@ -4265,7 +4264,6 @@ class LibvirtDriver(driver.ComputeDriver):
 
         return guest
 
-    @hooks.add_hook("nfv_hook")
     def _get_guest_xml(self, context, instance, network_info, disk_info,
                        image_meta=None, rescue=None,
                        block_device_info=None, write_to_disk=False):

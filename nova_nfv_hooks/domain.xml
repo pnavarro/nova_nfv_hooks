@@ -1,0 +1,98 @@
+<domain type="kvm">
+  <uuid>dee1cd26-d87c-48ea-8d53-01e5b2d48b88</uuid>
+  <name>instance-00000122</name>
+  <memory>4194304</memory>
+  <memoryBacking>
+    <hugepages>
+      <page size="1048576" nodeset="0" unit="KiB"/>
+    </hugepages>
+  </memoryBacking>
+  <numatune>
+    <memory mode="strict" nodeset="0"/>
+    <memnode cellid="0" mode="strict" nodeset="0"/>
+  </numatune>
+  <vcpu>2</vcpu>
+  <metadata>
+    <nova:instance xmlns:nova="http://openstack.org/xmlns/libvirt/nova/1.0">
+      <nova:package version="2014.2.2-19.el7ost"/>
+      <nova:name>sriov2</nova:name>
+      <nova:creationTime>2015-04-27 13:30:26</nova:creationTime>
+      <nova:flavor name="m1.medium.sriov">
+        <nova:memory>4096</nova:memory>
+        <nova:disk>40</nova:disk>
+        <nova:swap>0</nova:swap>
+        <nova:ephemeral>0</nova:ephemeral>
+        <nova:vcpus>2</nova:vcpus>
+      </nova:flavor>
+      <nova:owner>
+        <nova:user uuid="df1349004ae94863b9c3ebc7e74009d2">admin</nova:user>
+        <nova:project uuid="67d64f472edc466891527fb6d6e1918a">admin</nova:project>
+      </nova:owner>
+      <nova:root type="image" uuid="5ee0b768-15d8-4f53-964a-ab3a49c9904d"/>
+    </nova:instance>
+  </metadata>
+  <sysinfo type="smbios">
+    <system>
+      <entry name="manufacturer">Fedora Project</entry>
+      <entry name="product">OpenStack Nova</entry>
+      <entry name="version">2014.2.2-19.el7ost</entry>
+      <entry name="serial">8c457212-f4db-4a0d-bd1d-3b3449f6ec4d</entry>
+      <entry name="uuid">dee1cd26-d87c-48ea-8d53-01e5b2d48b88</entry>
+    </system>
+  </sysinfo>
+  <os></os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <cputune>
+    <emulatorpin cpuset="5,21"/>
+    <vcpupin vcpu="0" cpuset="5"/>
+    <vcpupin vcpu="1" cpuset="21"/>
+  </cputune>
+  <clock offset="utc">
+    <timer name="pit" tickpolicy="delay"/>
+    <timer name="rtc" tickpolicy="catchup"/>
+    <timer name="hpet" present="no"/>
+  </clock>
+  <cpu mode="host-model" match="exact">
+    <topology sockets="1" cores="1" threads="2"/>
+    <numa>
+      <cell id="0" cpus="0-1" memory="4194304"/>
+    </numa>
+  </cpu>
+  <devices>
+    <disk type="file" device="disk">
+      <driver name="qemu" type="qcow2" cache="none"/>
+      <source file="/var/lib/nova/instances/dee1cd26-d87c-48ea-8d53-01e5b2d48b88/disk"/>
+      <target bus="virtio" dev="vda"/>
+    </disk>
+    <interface type="bridge">
+      <mac address="fa:16:3e:81:1b:34"/>
+      <model type="virtio"/>
+      <source bridge="qbr6cbc7146-3f"/>
+      <target dev="tap6cbc7146-3f"/>
+    </interface>
+    <interface type="hostdev" managed="yes">
+      <mac address="fa:16:3e:4f:0a:1e"/>
+      <source>
+        <address type="pci" domain="0x0000" bus="0x02" slot="0x11" function="0x7"/>
+      </source>
+      <vlan>
+        <tag id="3013"/>
+      </vlan>
+    </interface>
+    <serial type="file">
+      <source path="/var/lib/nova/instances/dee1cd26-d87c-48ea-8d53-01e5b2d48b88/console.log"/>
+    </serial>
+    <serial type="pty"/>
+    <input type="tablet" bus="usb"/>
+    <graphics type="vnc" autoport="yes" keymap="en-us" listen="0.0.0.0"/>
+    <video>
+      <model type="cirrus"/>
+    </video>
+    <memballoon model="virtio">
+      <stats period="10"/>
+    </memballoon>
+  </devices>
+</domain>

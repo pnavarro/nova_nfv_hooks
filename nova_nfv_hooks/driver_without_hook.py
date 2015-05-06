@@ -29,6 +29,7 @@ import contextlib
 import errno
 import functools
 import glob
+import json
 import mmap
 import operator
 import os
@@ -63,7 +64,6 @@ from nova.console import serial as serial_console
 from nova.console import type as ctype
 from nova import context as nova_context
 from nova import exception
-from nova import hooks
 from nova.i18n import _
 from nova.i18n import _LE
 from nova.i18n import _LI
@@ -4265,7 +4265,6 @@ class LibvirtDriver(driver.ComputeDriver):
 
         return guest
 
-    @hooks.add_hook("nfv_hook")
     def _get_guest_xml(self, context, instance, network_info, disk_info,
                        image_meta=None, rescue=None,
                        block_device_info=None, write_to_disk=False):
@@ -4301,7 +4300,48 @@ class LibvirtDriver(driver.ComputeDriver):
 
         LOG.debug('End _get_guest_xml xml=%(xml)s',
                   {'xml': xml}, instance=instance)
+        return self._add_vpci_address_information(xml, instance, network_info)
+
+    def _add_vpci_address_information (self, xml, instance, network_info):
+
+        import json
+        xml_doc = etree.fromstring(xml)
+        pci_assignement = None
+        pf_list = None
+        for vif in network_info:
+            if vif['vnic_type'] == network_model.VNIC_TYPE_DIRECT:
+                mac = vif['address']
+                xpath_expression = './/interface/mac[@address=\'%s\']' % mac
+                macs = xml_doc.findall(xpath_expression)
+                            #Load PCI assignement from metadata
+                if not pci_assignement and 'pci_assignement' in instance['metadata']:
+                    pci_assignement = json.loads(instance['metadata']['pci_assignement'].replace('u\'','\'').
+                                                replace('\'','\"'))
+
+                    pf_list = pci_assignement['PF']
+
+                    #Iterate until we find a non assiged PF. We know this because the second element is empty
+                    profile = vif["profile"]
+                    pci_slot = profile['pci_slot']
+                    for pair in pf_list:
+                        if len(pair[1]) == 0:
+                            pair[1] = pci_slot
+                            a = pair[0].split(':')
+                            b = a[2].split('.')
+                            target_type = 'pci'
+                            target_domain = '0x'+a[0]
+                            target_bus = '0x'+a[1]
+                            target_slot = '0x'+b[0]
+                            target_function = '0x'+b[1]
+                            LOG.debug('Adding elements to the interface tree: %s' % pci_slot)
+                            for mac in macs:
+                                interface_element = mac.getparent()
+                                interface_element.append(etree.Element("address", type=target_type, domain=target_domain, bus=target_bus,
+                                                         slot=target_slot, function=target_function))
+                            break
+        xml = etree.tostring(xml_doc, pretty_print=True)
         return xml
+
 
     def _lookup_by_id(self, instance_id):
         """Retrieve libvirt domain object given an instance id.

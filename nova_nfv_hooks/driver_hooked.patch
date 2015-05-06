@@ -1,0 +1,18 @@
+--- /usr/lib/python2.7/site-packages/nova/virt/libvirt/driver.py        2015-03-19 13:29:36.000000000 +0100
++++ /usr/lib/python2.7/site-packages/nova/virt/libvirt/driver_hooks.py  2015-04-27 12:38:09.325446106 +0200
+@@ -63,6 +63,7 @@
+ from nova.console import type as ctype
+ from nova import context as nova_context
+ from nova import exception
++from nova import hooks
+ from nova.i18n import _
+ from nova.i18n import _LE
+ from nova.i18n import _LI
+@@ -4264,6 +4265,7 @@
+
+         return guest
+
++    @hooks.add_hook("nfv_hook")
+     def _get_guest_xml(self, context, instance, network_info, disk_info,
+                        image_meta=None, rescue=None,
+                        block_device_info=None, write_to_disk=False):
