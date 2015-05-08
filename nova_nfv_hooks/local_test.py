@@ -3,12 +3,9 @@ import time
 from lxml import etree
 from io import StringIO
 
-def my_hook(xml):
-    xml = ''
-
 if __name__ == "__main__":
     parser = etree.XMLParser(remove_blank_text=True)
-    xml_doc = etree.parse('domain.xml', parser)
+    xml_doc = etree.parse('domain_pci.xml', parser)
     #xml = '<a xmlns="test"><b xmlns="test"/></a>'
     #xml_doc = etree.XML(xml, parser)
     mac = 'fa:16:3e:4f:0a:1e'
@@ -22,16 +19,25 @@ if __name__ == "__main__":
     index = xml_str.find(mac_address_str)
     target_type = 'pci'
     target_domain = '0x0000'
-    target_bus = '0x00'
-    target_slot = '0x11'
-    target_function = '0x0'
+    target_bus = '0x0a'
+    target_slot = '0x00'
+    target_function = '0x1'
     address_str = '<address type=\"pci\" domain=\"%(domain)s\" bus=\"%(bus)s\" slot=\"%(slot)s\" ' \
                   'function=\"%(function)s\"/>' % {'domain':target_domain,
                                                   'bus': target_bus,
                                                   'slot': target_slot,
                                                   'function': target_function}
-    my_hook(xml_str)
 
+    # xpath_expression = './/hostdev/source/address[@domain=\'%s\' and ' \
+    #                    '@bus=\'%s\' and @slot=\'%s\' and @function=\'%s\'] ' % (target_domain, target_bus, target_slot, target_function)
+    xpath_expression = './/hostdev/source/address[@domain=\'0x0000\']'
+    addresses = xml_doc.findall(xpath_expression)
+    for address in addresses:
+        ad_bus = address.get('bus')
+        ad_slot = address.get('slot')
+        ad_function = address.get('function')
+        if target_bus in ad_bus and target_slot in ad_slot and target_function in ad_function:
+            print 'OK'
     print xml_str
 
     # <interface type="hostdev" managed="yes">
