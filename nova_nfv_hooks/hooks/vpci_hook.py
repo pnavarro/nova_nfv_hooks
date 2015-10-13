@@ -3,6 +3,7 @@
 from nova.network import model as network_model
 from nova.pci import manager
 from nova.pci import utils
+from lxml import etree
 import json
 
 def add_vpci_address_information(self, xml, instance, network_info):
