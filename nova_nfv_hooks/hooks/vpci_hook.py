@@ -1,17 +1,11 @@
 #!/usr/bin/python
 
-from nova.openstack.common import log as logging
 from nova.network import model as network_model
-from nova.pci import pci_manager
-from nova.pci import pci_utils
-from lxml import etree
+from nova.pci import manager
+from nova.pci import utils
 import json
 
-LOG = logging.getLogger(__name__)
-
-
 def add_vpci_address_information(self, xml, instance, network_info):
-    LOG.debug('The BEFORE modified xml of the vPCI hook: %s' % xml)
     parser = etree.XMLParser(remove_blank_text=True)
     xml_doc = etree.XML(xml, parser)
     pci_assignement = None
@@ -45,7 +39,7 @@ def add_vpci_address_information(self, xml, instance, network_info):
                     source = vif_network_label
                     _append_address(pci_list, macs, source)
 
-    for pci_dev in pci_manager.get_instance_pci_devs(instance):
+    for pci_dev in manager.get_instance_pci_devs(instance):
         address_element = _get_address_element_from_pci_address(pci_dev, xml_doc)
         if pci_assignement:
             #Get the PF list
@@ -68,7 +62,6 @@ def add_vpci_address_information(self, xml, instance, network_info):
                     break
 
     xml = etree.tostring(xml_doc, pretty_print=True)
-    LOG.debug('The modified xml of the vPCI hook: %s' % xml)
     instance['metadata']['pci_assignement']=str(pci_assignement)
     return xml
 
@@ -85,7 +78,6 @@ def _append_address(pf_list, macs, pci_slot):
             target_bus = '0x'+a[1]
             target_slot = '0x'+b[0]
             target_function = '0x'+b[1]
-            LOG.debug('Adding elements to the interface tree: %s' % pci_slot)
             for mac in macs:
                 interface_element = mac.getparent()
                 interface_element.append(etree.Element("address", type=target_type, domain=target_domain, bus=target_bus,
@@ -94,7 +86,7 @@ def _append_address(pf_list, macs, pci_slot):
 
 
 def _get_address_element_from_pci_address(pci_dev, xml_doc):
-    dbsf = pci_utils.parse_address(pci_dev['address'])
+    dbsf = utils.parse_address(pci_dev['address'])
     domain, bus, slot, function = dbsf
     # This xpath expression gives me predicate error
     # xpath_expression = './/hostdev/source/address[@domain=\'%s\' and ' \
@@ -111,3 +103,4 @@ def _get_address_element_from_pci_address(pci_dev, xml_doc):
         target_function = '0x' + ad_function
         if bus in target_bus and slot in target_slot and function in target_function:
             return address
+
