@@ -11,9 +11,8 @@ import os
 def add_vpci_address_information(self, xml_parameter, instance, network_info):
     instance_dir = libvirt_utils.get_instance_path(instance)
     xml_path = os.path.join(instance_dir, 'libvirt.xml')
-    with libvirt_utils.file_open(xml_path) as xml:
-        parser = etree.XMLParser(remove_blank_text=True)
-        xml_doc = etree.XML(xml, parser)
+    parser = etree.XMLParser(remove_blank_text=True)
+    xml_doc = etree.parse(xml_path, parser)
     pci_assignement = None
     vf_list = None
     pf_list = None
@@ -30,9 +29,9 @@ def add_vpci_address_information(self, xml_parameter, instance, network_info):
         else:
             metadata_element = xml_doc.find("metadata")
             instance_metadata_dict = instance['metadata']
-            metadata_text = json.dumps(instance_metadata_dict)
+            instance_metadata = json.dumps(instance_metadata_dict)
             instance_metadata_element = etree.Element("instance_metadata")
-            instance_metadata_element.text = metadata_text
+            instance_metadata_element.text = instance_metadata
             metadata_element.append(instance_metadata_element)
         if not pci_assignement and 'pci_assignement' in instance_metadata:
             pci_assignement = json.loads(instance_metadata_dict['pci_assignement'].replace('u\'','\'').replace('\'','\"'))
