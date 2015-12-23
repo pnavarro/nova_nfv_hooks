@@ -3,12 +3,17 @@
 from nova.network import model as network_model
 from nova.pci import manager
 from nova.pci import utils
+from nova.virt.libvirt import utils as libvirt_utils
 from lxml import etree
 import json
+import os
 
-def add_vpci_address_information(self, xml, instance, network_info):
-    parser = etree.XMLParser(remove_blank_text=True)
-    xml_doc = etree.XML(xml, parser)
+def add_vpci_address_information(self, xml_parameter, instance, network_info):
+    instance_dir = libvirt_utils.get_instance_path(instance)
+    xml_path = os.path.join(instance_dir, 'libvirt.xml')
+    with libvirt_utils.file_open(xml_path) as xml:
+        parser = etree.XMLParser(remove_blank_text=True)
+        xml_doc = etree.XML(xml, parser)
     pci_assignement = None
     vf_list = None
     pf_list = None
@@ -18,8 +23,19 @@ def add_vpci_address_information(self, xml, instance, network_info):
         mac = vif['address']
         xpath_expression = './/interface/mac[@address=\'%s\']' % mac
         macs = xml_doc.findall(xpath_expression)
-        if not pci_assignement and 'pci_assignement' in instance['metadata']:
-            pci_assignement = json.loads(instance['metadata']['pci_assignement'].replace('u\'','\'').replace('\'','\"'))
+        instance_metadata_element = xml_doc.find(".//metadata/instance_metadata")
+        if instance_metadata_element is not None:
+            instance_metadata = instance_metadata_element.text
+            instance_metadata_dict = json.loads(instance_metadata)
+        else:
+            metadata_element = xml_doc.find("metadata")
+            instance_metadata_dict = instance['metadata']
+            metadata_text = json.dumps(instance_metadata_dict)
+            instance_metadata_element = etree.Element("instance_metadata")
+            instance_metadata_element.text = metadata_text
+            metadata_element.append(instance_metadata_element)
+        if not pci_assignement and 'pci_assignement' in instance_metadata:
+            pci_assignement = json.loads(instance_metadata_dict['pci_assignement'].replace('u\'','\'').replace('\'','\"'))
         if vif['vnic_type'] == network_model.VNIC_TYPE_DIRECT:
             if pci_assignement:
                 vf_list = pci_assignement['VF']
@@ -64,6 +80,7 @@ def add_vpci_address_information(self, xml, instance, network_info):
 
     xml = etree.tostring(xml_doc, pretty_print=True)
     instance['metadata']['pci_assignement']=str(pci_assignement)
+    libvirt_utils.write_to_file(xml_path, xml)
     return xml
 
 
